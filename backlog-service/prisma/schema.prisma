@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BacklogStatus {
+  want_to_play
+  playing
+  completed
+  abandoned
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String         @map("password_hash")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  backlog      BacklogEntry[]
+
+  @@map("users")
+}
+
+model Game {
+  id           String         @id @default(cuid())
+  externalId   Int            @unique @map("external_id")
+  name         String
+  coverUrl     String?        @map("cover_url")
+  releaseYear  Int?           @map("release_year")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+  backlog      BacklogEntry[]
+
+  @@map("games")
+}
+
+model BacklogEntry {
+  id        String        @id @default(cuid())
+  userId    String        @map("user_id")
+  gameId    String        @map("game_id")
+  status    BacklogStatus
+  rating    Int?
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  game      Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, gameId])
+  @@map("backlog_entries")
+}

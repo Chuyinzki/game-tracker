@@ -1,0 +1,5 @@
+packages:
+  - frontend
+  - gateway
+  - games-service
+  - backlog-service

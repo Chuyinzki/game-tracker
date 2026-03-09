@@ -1,0 +1,16 @@
+{
+  "name": "game-tracker",
+  "private": true,
+  "packageManager": "pnpm@10.6.2",
+  "scripts": {
+    "dev:frontend": "corepack pnpm --filter frontend dev",
+    "dev:gateway": "corepack pnpm --filter gateway dev",
+    "dev:games-service": "corepack pnpm --filter games-service dev",
+    "dev:backlog-service": "corepack pnpm --filter backlog-service dev",
+    "build": "corepack pnpm -r build",
+    "test": "corepack pnpm -r test",
+    "lint": "corepack pnpm -r lint",
+    "prisma:generate": "corepack pnpm --filter backlog-service prisma generate",
+    "prisma:migrate": "corepack pnpm --filter backlog-service prisma migrate dev"
+  }
+}
