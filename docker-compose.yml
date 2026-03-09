@@ -5,6 +5,11 @@ services:
       POSTGRES_DB: game_backlog
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d game_backlog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     ports:
       - "5432:5432"
     volumes:
@@ -19,7 +24,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - app-network
 
@@ -29,6 +36,7 @@ services:
       dockerfile: games-service/Dockerfile
     env_file:
       - .env
+    restart: unless-stopped
     networks:
       - app-network
 
@@ -39,8 +47,11 @@ services:
     env_file:
       - .env
     depends_on:
-      - backlog-service
-      - games-service
+      backlog-service:
+        condition: service_started
+      games-service:
+        condition: service_started
+    restart: unless-stopped
     ports:
       - "3000:3000"
     networks:
@@ -53,7 +64,9 @@ services:
     env_file:
       - .env
     depends_on:
-      - gateway
+      gateway:
+        condition: service_started
+    restart: unless-stopped
     ports:
       - "5173:5173"
     networks:

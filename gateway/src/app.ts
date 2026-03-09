@@ -1,5 +1,4 @@
 import Fastify from "fastify";
-import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { authPlugin } from "./plugins/auth.js";
@@ -14,11 +13,6 @@ export function buildApp(env: GatewayEnv) {
       level: env.NODE_ENV === "production" ? "info" : "debug"
     },
     requestIdHeader: "x-request-id"
-  });
-
-  app.register(cors, {
-    origin: true,
-    credentials: false
   });
 
   app.register(rateLimit, {
@@ -36,6 +30,19 @@ export function buildApp(env: GatewayEnv) {
       url: request.url,
       requestId: request.id
     }, "incoming request");
+  });
+
+  app.addHook("preHandler", async (request, reply) => {
+    const origin = request.headers.origin ?? "*";
+
+    reply.header("Access-Control-Allow-Origin", origin);
+    reply.header("Vary", "Origin, Access-Control-Request-Headers");
+    reply.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
+    reply.header("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
+  });
+
+  app.options("/*", async (_request, reply) => {
+    return reply.code(204).send();
   });
 
   app.register(async (instance) => {
