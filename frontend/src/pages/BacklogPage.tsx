@@ -3,6 +3,18 @@ import { api } from "../lib/api";
 import type { BacklogEntry, BacklogStatus } from "../types";
 
 const STATUS_OPTIONS: BacklogStatus[] = ["want_to_play", "playing", "completed", "abandoned"];
+const STATUS_STYLES: Record<BacklogStatus, string> = {
+  want_to_play: "border-amber-200 bg-amber-50 text-amber-900",
+  playing: "border-sky-200 bg-sky-50 text-sky-900",
+  completed: "border-emerald-200 bg-emerald-50 text-emerald-900",
+  abandoned: "border-rose-200 bg-rose-50 text-rose-900"
+};
+const STATUS_LABELS: Record<BacklogStatus, string> = {
+  want_to_play: "want to play",
+  playing: "playing",
+  completed: "completed",
+  abandoned: "abandoned"
+};
 
 type BacklogPageProps = {
   token: string;
@@ -42,7 +54,7 @@ export function BacklogPage({ token }: BacklogPageProps) {
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as BacklogStatus | "all")}
-          className="rounded-2xl border border-slate-300 px-3 py-2 text-sm"
+          className={`rounded-2xl border px-3 py-2 text-sm ${statusFilter === "all" ? "border-slate-300 bg-white text-slate-700" : STATUS_STYLES[statusFilter]}`}
         >
           {FILTER_OPTIONS.map((status) => (
             <option key={status} value={status}>
@@ -63,13 +75,18 @@ export function BacklogPage({ token }: BacklogPageProps) {
               )}
             </div>
             <div>
-              <h2 className="text-xl font-semibold">{entry.gameName}</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-semibold">{entry.gameName}</h2>
+                <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ${STATUS_STYLES[entry.status]}`}>
+                  {STATUS_LABELS[entry.status]}
+                </span>
+              </div>
               <p className="text-sm text-slate-600">{entry.releaseYear ?? "TBA"}</p>
             </div>
             <select
               value={entry.status}
               onChange={(event) => void updateEntry(entry, event.target.value as BacklogStatus, entry.rating)}
-              className="rounded-2xl border border-slate-300 px-3 py-2"
+              className={`rounded-2xl border px-3 py-2 ${STATUS_STYLES[entry.status]}`}
             >
               {STATUS_OPTIONS.map((status) => (
                 <option key={status} value={status}>
