@@ -13,9 +13,9 @@ export function App() {
   return (
     <Routes>
       <Route element={<Layout user={auth?.user ?? null} onLogout={logout} />}>
-        <Route path="/" element={<Navigate to={auth ? "/search" : "/login"} replace />} />
-        <Route path="/login" element={<AuthPage mode="login" onAuthenticated={saveAuth} />} />
-        <Route path="/register" element={<AuthPage mode="register" onAuthenticated={saveAuth} />} />
+        <Route path="/" element={<Navigate to={auth ? "/stats" : "/login"} replace />} />
+        <Route path="/login" element={auth ? <Navigate to="/stats" replace /> : <AuthPage mode="login" onAuthenticated={saveAuth} />} />
+        <Route path="/register" element={auth ? <Navigate to="/stats" replace /> : <AuthPage mode="register" onAuthenticated={saveAuth} />} />
         <Route element={<ProtectedRoute user={auth?.user ?? null} />}>
           <Route path="/search" element={auth ? <SearchPage token={auth.token} /> : null} />
           <Route path="/backlog" element={auth ? <BacklogPage token={auth.token} /> : null} />

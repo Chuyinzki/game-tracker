@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import type { BacklogStatus, GameSummary } from "../types";
 
@@ -53,7 +54,6 @@ export function SearchPage({ token }: SearchPageProps) {
 
     try {
       const response = await api.searchGames(query);
-      console.log("Search results payload:", response);
       setResults(response);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Search failed.");
@@ -116,25 +116,34 @@ export function SearchPage({ token }: SearchPageProps) {
                   <p className="text-xs text-slate-500">Checking backlog status...</p>
                 ) : null}
               </div>
-              <div className="flex gap-3">
-                <select
-                  value={statusByGame[game.id] ?? "want_to_play"}
-                  onChange={(event) => setStatusByGame((current) => ({
-                    ...current,
-                    [game.id]: event.target.value as BacklogStatus
-                  }))}
-                  className={`flex-1 rounded-2xl border px-3 py-2 ${STATUS_STYLES[statusByGame[game.id] ?? "want_to_play"]}`}
-                >
-                  {STATUS_OPTIONS.map((status) => (
-                    <option key={status} value={status}>
-                      {status.replaceAll("_", " ")}
-                    </option>
-                  ))}
-                </select>
-                <button onClick={() => void addGame(game)} className="rounded-2xl bg-accent px-4 py-2 font-semibold text-white">
-                  Add
-                </button>
-              </div>
+              {backlogStatusByGame[game.id] ? (
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-slate-600">Already in backlog.</p>
+                  <Link to="/backlog" className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">
+                    View in backlog
+                  </Link>
+                </div>
+              ) : (
+                <div className="flex gap-3">
+                  <select
+                    value={statusByGame[game.id] ?? "want_to_play"}
+                    onChange={(event) => setStatusByGame((current) => ({
+                      ...current,
+                      [game.id]: event.target.value as BacklogStatus
+                    }))}
+                    className={`flex-1 rounded-2xl border px-3 py-2 ${STATUS_STYLES[statusByGame[game.id] ?? "want_to_play"]}`}
+                  >
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>
+                        {status.replaceAll("_", " ")}
+                      </option>
+                    ))}
+                  </select>
+                  <button onClick={() => void addGame(game)} className="rounded-2xl bg-accent px-4 py-2 font-semibold text-white">
+                    Add
+                  </button>
+                </div>
+              )}
             </div>
           </article>
         ))}
