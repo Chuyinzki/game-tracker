@@ -27,6 +27,10 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/backlog-service/node_modules
     networks:
       - app-network
 
@@ -37,6 +41,10 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/games-service/node_modules
     networks:
       - app-network
 
@@ -52,6 +60,10 @@ services:
       games-service:
         condition: service_started
     restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/gateway/node_modules
     ports:
       - "3000:3000"
     networks:
@@ -67,6 +79,10 @@ services:
       gateway:
         condition: service_started
     restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/frontend/node_modules
     ports:
       - "5173:5173"
     networks:
