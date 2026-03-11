@@ -56,6 +56,14 @@ export function BacklogPage({ token }: BacklogPageProps) {
   const filteredEntries = statusFilter === "all"
     ? entries
     : entries.filter((entry) => entry.status === statusFilter);
+  const sortedEntries = [...filteredEntries].sort((a, b) => {
+    const aCompleted = a.status === "completed";
+    const bCompleted = b.status === "completed";
+    if (aCompleted === bCompleted) {
+      return 0;
+    }
+    return aCompleted ? 1 : -1;
+  });
   const topRatedCompleted = entries
     .filter((entry) => entry.status === "completed" && entry.rating !== null)
     .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
@@ -114,7 +122,7 @@ export function BacklogPage({ token }: BacklogPageProps) {
           </div>
         </section>
       ) : null}
-      {filteredEntries.map((entry) => (
+      {sortedEntries.map((entry) => (
         <article key={entry.id} className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">
           <div className="grid gap-4 p-5 md:grid-cols-[140px_1fr_auto_auto] md:items-center">
             <div className="h-24 w-full overflow-hidden rounded-[1.5rem] bg-slate-200 md:h-20 md:w-32">
