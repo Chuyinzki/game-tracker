@@ -34,6 +34,17 @@ export function BacklogPage({ token }: BacklogPageProps) {
   }, [token]);
 
   async function updateEntry(entry: BacklogEntry, status: BacklogStatus, rating: number | null) {
+    if (status !== "completed" && rating !== null) {
+      setError("Ratings can only be set for completed games.");
+      return;
+    }
+    if (rating !== null && (rating < 1 || rating > 10)) {
+      setError("Rating must be between 1 and 10.");
+      return;
+    }
+    if (error) {
+      setError(null);
+    }
     try {
       const updated = await api.updateBacklog(entry.id, status, rating, token);
       setEntries((current) => current.map((item) => item.id === updated.id ? updated : item));
@@ -45,6 +56,10 @@ export function BacklogPage({ token }: BacklogPageProps) {
   const filteredEntries = statusFilter === "all"
     ? entries
     : entries.filter((entry) => entry.status === statusFilter);
+  const topRatedCompleted = entries
+    .filter((entry) => entry.status === "completed" && entry.rating !== null)
+    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
+    .slice(0, 4);
 
   return (
     <section className="space-y-4">
@@ -64,6 +79,41 @@ export function BacklogPage({ token }: BacklogPageProps) {
         </select>
         <span className="text-sm text-slate-500">{filteredEntries.length} results</span>
       </div>
+      {statusFilter === "completed" && topRatedCompleted.length > 0 ? (
+        <section className="rounded-[2rem] border border-emerald-100 bg-emerald-50/70 p-5 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-emerald-700">Top rated</p>
+              <h3 className="mt-1 font-display text-2xl text-emerald-900">Completed highlights</h3>
+            </div>
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+              {topRatedCompleted.length} picks
+            </span>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {topRatedCompleted.map((entry) => (
+              <article key={entry.id} className="overflow-hidden rounded-[1.75rem] border border-emerald-200 bg-white shadow-[0_18px_40px_rgba(16,24,40,0.12)]">
+                <div className="h-36 bg-slate-200">
+                  {entry.coverUrl ? (
+                    <img src={entry.coverUrl} alt={entry.gameName} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-slate-500">No cover</div>
+                  )}
+                </div>
+                <div className="space-y-2 p-4">
+                  <h4 className="text-base font-semibold text-ink">{entry.gameName}</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                      Rating {entry.rating}
+                    </span>
+                    <span className="text-xs text-slate-500">{entry.releaseYear ?? "TBA"}</span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
       {filteredEntries.map((entry) => (
         <article key={entry.id} className="overflow-hidden rounded-[2rem] border border-white/60 bg-white/80 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">
           <div className="grid gap-4 p-5 md:grid-cols-[140px_1fr_auto_auto] md:items-center">
@@ -101,6 +151,13 @@ export function BacklogPage({ token }: BacklogPageProps) {
               value={entry.rating ?? ""}
               onChange={(event) => {
                 const nextValue = event.target.value === "" ? null : Number(event.target.value);
+                if (nextValue !== null && (Number.isNaN(nextValue) || nextValue < 1 || nextValue > 10)) {
+                  setError("Rating must be between 1 and 10.");
+                  return;
+                }
+                if (error) {
+                  setError(null);
+                }
                 void updateEntry(entry, entry.status, nextValue);
               }}
               disabled={entry.status !== "completed"}
