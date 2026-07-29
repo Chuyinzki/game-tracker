@@ -50,8 +50,12 @@ const STATUS_TO_API = {
 
 type GraphQLStatus = keyof typeof STATUS_TO_API;
 
-function toGraphQLStatus(status: BacklogEntry["status"]): GraphQLStatus {
-  return STATUS_TO_GRAPHQL[status] as GraphQLStatus;
+function toGraphQLStatus(status: BacklogEntry["status"] | GraphQLStatus): GraphQLStatus {
+  if (status in STATUS_TO_API) {
+    return status as GraphQLStatus;
+  }
+
+  return STATUS_TO_GRAPHQL[status as BacklogEntry["status"]] as GraphQLStatus;
 }
 
 function toApiStatus(status: GraphQLStatus) {
@@ -148,9 +152,11 @@ export const resolvers = {
       const { BACKLOG_SERVICE_URL } = context.app.gatewayEnv;
 
       try {
-        return await requestJson<BacklogEntry[]>(`${BACKLOG_SERVICE_URL}/backlog`, {
+        const entries = await requestJson<BacklogEntry[]>(`${BACKLOG_SERVICE_URL}/backlog`, {
           headers: userHeaders(user)
         });
+
+        return entries.map(toGraphQLBacklogEntry);
       } catch (error) {
         throw new GraphQLError(errorMessage(error, "Unable to load backlog."), {
           extensions: {
@@ -284,5 +290,9 @@ export const resolvers = {
         });
       }
     }
+  }
+  ,
+  BacklogEntry: {
+    status: (entry: BacklogEntry) => toGraphQLStatus(entry.status)
   }
 };
