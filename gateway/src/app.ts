@@ -2,6 +2,7 @@ import Fastify from "fastify";
 import rateLimit from "@fastify/rate-limit";
 import { ZodError } from "zod";
 import { authPlugin } from "./plugins/auth.js";
+import { registerGraphQL } from "./graphql/register.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerBacklogRoutes } from "./routes/backlog.js";
 import { registerGameRoutes } from "./routes/games.js";
@@ -22,6 +23,10 @@ export function buildApp(env: GatewayEnv) {
 
   app.register(authPlugin, {
     secret: env.JWT_SECRET
+  });
+
+  app.register(async (instance) => {
+    await registerGraphQL(instance, env);
   });
 
   app.addHook("onRequest", async (request) => {

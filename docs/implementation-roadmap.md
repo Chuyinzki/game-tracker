@@ -28,6 +28,8 @@ That means we are not starting from zero. The roadmap is about expanding the sta
 
 The first set of architecture choices is captured in [`docs/phase-1-decisions.md`](./phase-1-decisions.md).
 
+The GraphQL contract for the next step is captured in [`docs/phase-2-graphql-contract.md`](./phase-2-graphql-contract.md).
+
 ## Roadmap Overview
 
 1. Lock the target architecture and service responsibilities

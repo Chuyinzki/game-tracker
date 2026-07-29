@@ -14,6 +14,10 @@ export default defineConfig({
       "/api": {
         target: "http://gateway:3000",
         changeOrigin: true
+      },
+      "/graphql": {
+        target: "http://gateway:3000",
+        changeOrigin: true
       }
     }
   },
