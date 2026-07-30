@@ -3,3 +3,4 @@ packages:
   - gateway
   - games-service
   - backlog-service
+  - events-service

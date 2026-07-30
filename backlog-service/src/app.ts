@@ -1,18 +1,21 @@
 import Fastify from "fastify";
 import { ZodError } from "zod";
+import { rabbitmqPlugin } from "./plugins/rabbitmq.js";
 import { prismaPlugin } from "./plugins/prisma.js";
 import { registerAuthRoutes } from "./routes/auth.js";
 import { registerBacklogRoutes } from "./routes/backlog.js";
 import { AppError } from "./lib/errors.js";
+import type { BacklogServiceEnv } from "./env.js";
 
-export function buildApp() {
+export function buildApp(env: BacklogServiceEnv) {
   const app = Fastify({
     logger: {
-      level: process.env.NODE_ENV === "production" ? "info" : "debug"
+      level: env.NODE_ENV === "production" ? "info" : "debug"
     }
   });
 
   app.register(prismaPlugin);
+  app.register(rabbitmqPlugin, { url: env.RABBITMQ_URL });
   app.register(registerAuthRoutes);
   app.register(registerBacklogRoutes);
 

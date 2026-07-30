@@ -1,4 +1,22 @@
 services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: app
+      RABBITMQ_DEFAULT_PASS: app
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - app-network
+
   postgres:
     image: postgres:16-alpine
     environment:
@@ -26,11 +44,32 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       - .:/app
       - /app/node_modules
       - /app/backlog-service/node_modules
+    networks:
+      - app-network
+
+  events-service:
+    build:
+      context: .
+      dockerfile: events-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/events-service/node_modules
+    ports:
+      - "3003:3003"
     networks:
       - app-network
 
@@ -89,6 +128,7 @@ services:
       - app-network
 
 volumes:
+  rabbitmq-data:
   postgres-data:
 
 networks:

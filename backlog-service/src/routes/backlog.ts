@@ -1,6 +1,7 @@
 import type { BacklogStatus, Prisma } from "@prisma/client";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { AppError } from "../lib/errors.js";
+import { buildBacklogEvent } from "../lib/events.js";
 import { buildStats } from "../lib/stats.js";
 import { createBacklogSchema, updateBacklogSchema } from "../lib/validation.js";
 
@@ -36,6 +37,14 @@ function serializeEntry(entry: Prisma.BacklogEntryGetPayload<{ include: { game: 
     rating: entry.rating,
     createdAt: entry.createdAt,
     updatedAt: entry.updatedAt
+  };
+}
+
+function toEventEntry(entry: ReturnType<typeof serializeEntry>) {
+  return {
+    ...entry,
+    createdAt: entry.createdAt.toISOString(),
+    updatedAt: entry.updatedAt.toISOString()
   };
 }
 
@@ -79,7 +88,16 @@ export async function registerBacklogRoutes(app: FastifyInstance) {
         }
       });
 
-      return reply.code(201).send(serializeEntry(entry));
+      const serializedEntry = serializeEntry(entry);
+      const event = buildBacklogEvent("backlog.item.created", userId, toEventEntry(serializedEntry));
+
+      try {
+        await app.rabbitmq.publishBacklogEvent(event);
+      } catch (publishError) {
+        app.log.warn({ err: publishError, eventId: event.eventId }, "failed to publish backlog created event");
+      }
+
+      return reply.code(201).send(serializedEntry);
     } catch (error) {
       if ((error as { code?: string }).code === "P2002") {
         throw new AppError(409, "Game is already in the backlog.");
@@ -137,7 +155,16 @@ export async function registerBacklogRoutes(app: FastifyInstance) {
       }
     });
 
-    return serializeEntry(entry);
+    const serializedEntry = serializeEntry(entry);
+
+    const event = buildBacklogEvent("backlog.item.updated", userId, toEventEntry(serializedEntry));
+    try {
+      await app.rabbitmq.publishBacklogEvent(event);
+    } catch (publishError) {
+      app.log.warn({ err: publishError, eventId: event.eventId }, "failed to publish backlog updated event");
+    }
+
+    return serializedEntry;
   });
 
   app.get("/backlog/stats", async (request) => {

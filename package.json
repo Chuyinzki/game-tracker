@@ -7,6 +7,7 @@
     "dev:gateway": "corepack pnpm --filter gateway dev",
     "dev:games-service": "corepack pnpm --filter games-service dev",
     "dev:backlog-service": "corepack pnpm --filter backlog-service dev",
+    "dev:events-service": "corepack pnpm --filter events-service dev",
     "build": "corepack pnpm -r build",
     "test": "corepack pnpm -r test",
     "lint": "corepack pnpm -r lint",
