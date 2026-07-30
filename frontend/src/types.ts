@@ -53,3 +53,19 @@ export type DashboardInsights = {
   }>;
   generatedAt: string;
 };
+
+export type NotificationDigest = {
+  notificationCount: number;
+  latestNotificationTitle: string | null;
+  latestNotificationGame: string | null;
+  recentNotifications: Array<{
+    eventType: string;
+    title: string;
+    message: string;
+    severity: string;
+    gameName: string;
+    status: string;
+    occurredAt: string;
+  }>;
+  generatedAt: string;
+};

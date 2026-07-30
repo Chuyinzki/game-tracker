@@ -92,6 +92,21 @@ services:
     networks:
       - app-network
 
+  java-service:
+    build:
+      context: .
+      dockerfile: java-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    networks:
+      - app-network
+
   games-service:
     build:
       context: .
@@ -118,6 +133,8 @@ services:
       games-service:
         condition: service_started
       go-service:
+        condition: service_started
+      java-service:
         condition: service_started
     restart: unless-stopped
     volumes:

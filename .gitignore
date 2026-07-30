@@ -8,3 +8,4 @@ coverage
 *.log
 backlog-service/prisma/dev.db
 backlog-service/prisma/dev.db-journal
+java-service/target/

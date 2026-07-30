@@ -51,6 +51,22 @@ type DashboardInsights = {
   generatedAt: string;
 };
 
+type NotificationDigest = {
+  notificationCount: number;
+  latestNotificationTitle: string | null;
+  latestNotificationGame: string | null;
+  recentNotifications: Array<{
+    eventType: string;
+    title: string;
+    message: string;
+    severity: string;
+    gameName: string;
+    status: string;
+    occurredAt: string;
+  }>;
+  generatedAt: string;
+};
+
 const STATUS_TO_GRAPHQL = {
   want_to_play: "WANT_TO_PLAY",
   playing: "PLAYING",
@@ -209,6 +225,22 @@ export const resolvers = {
       } catch (error) {
         throw new GraphQLError(errorMessage(error, "Unable to load dashboard insights."), {
           extensions: {
+          code: "UPSTREAM_ERROR"
+          }
+        });
+      }
+    },
+    notificationDigest: async (_parent: unknown, _args: unknown, context: MercuriusContext) => {
+      const user = requireUser(context);
+      const { JAVA_SERVICE_URL } = context.app.gatewayEnv;
+
+      try {
+        return await requestJson<NotificationDigest>(`${JAVA_SERVICE_URL}/notifications/digest`, {
+          headers: userHeaders(user)
+        });
+      } catch (error) {
+        throw new GraphQLError(errorMessage(error, "Unable to load notifications."), {
+          extensions: {
             code: "UPSTREAM_ERROR"
           }
         });
@@ -323,8 +355,7 @@ export const resolvers = {
         });
       }
     }
-  }
-  ,
+  },
   BacklogEntry: {
     status: (entry: BacklogEntry) => toGraphQLStatus(entry.status)
   }

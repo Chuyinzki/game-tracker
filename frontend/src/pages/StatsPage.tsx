@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import type { BacklogEntry, DashboardInsights, Stats } from "../types";
+import type { BacklogEntry, DashboardInsights, NotificationDigest, Stats } from "../types";
 
 type StatsPageProps = {
   token: string;
@@ -16,8 +16,10 @@ const cards = [
 export function StatsPage({ token }: StatsPageProps) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [insights, setInsights] = useState<DashboardInsights | null>(null);
+  const [notificationDigest, setNotificationDigest] = useState<NotificationDigest | null>(null);
   const [topRated, setTopRated] = useState<BacklogEntry[]>([]);
   const [showRecentEvents, setShowRecentEvents] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,6 +33,14 @@ export function StatsPage({ token }: StatsPageProps) {
       .then(setInsights)
       .catch(() => {
         setInsights(null);
+      });
+  }, [token]);
+
+  useEffect(() => {
+    void api.fetchNotificationDigest(token)
+      .then(setNotificationDigest)
+      .catch(() => {
+        setNotificationDigest(null);
       });
   }, [token]);
 
@@ -127,6 +137,75 @@ export function StatsPage({ token }: StatsPageProps) {
           </div>
           <p className="mt-4 text-sm text-sky-900/70">
             Generated at {new Date(insights.generatedAt).toLocaleString()}
+          </p>
+        </section>
+      ) : null}
+      {notificationDigest ? (
+        <section className="rounded-[2rem] border border-amber-100 bg-amber-50/70 p-5 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-700">Java service</p>
+              <h3 className="mt-1 font-display text-2xl text-amber-950">Notification digest</h3>
+            </div>
+            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+              {notificationDigest.notificationCount} notifications
+            </span>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Latest title</p>
+              <p className="mt-2 text-lg font-semibold text-ink">
+                {notificationDigest.latestNotificationTitle ?? "No notifications yet"}
+              </p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Latest game</p>
+              <p className="mt-2 text-lg font-semibold text-ink">
+                {notificationDigest.latestNotificationGame ?? "Nothing yet"}
+              </p>
+            </article>
+          </div>
+          <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setShowNotifications((current) => !current)}
+              className="flex w-full items-center justify-between gap-4 text-left"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Recent notifications</p>
+                <p className="mt-1 text-sm text-slate-700">Expand to inspect the Java service digest.</p>
+              </div>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                {showNotifications ? "Hide" : "Show"}
+              </span>
+            </button>
+            {showNotifications ? (
+              <div className="mt-4 space-y-3">
+                {notificationDigest.recentNotifications.length > 0 ? notificationDigest.recentNotifications.map((notification) => (
+                  <article key={`${notification.eventType}-${notification.occurredAt}`} className="rounded-[1.25rem] border border-amber-100 bg-amber-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-ink">{notification.title}</p>
+                        <p className="text-sm text-slate-600">{notification.message}</p>
+                      </div>
+                      <span className="rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-800">
+                        {notification.severity}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-3 text-xs text-slate-500">
+                      <span>{notification.gameName}</span>
+                      <span>{notification.status.replaceAll("_", " ")}</span>
+                      <span>{new Date(notification.occurredAt).toLocaleString()}</span>
+                    </div>
+                  </article>
+                )) : (
+                  <p className="text-sm text-slate-500">No notifications yet.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
+          <p className="mt-4 text-sm text-amber-950/70">
+            Generated at {new Date(notificationDigest.generatedAt).toLocaleString()}
           </p>
         </section>
       ) : null}

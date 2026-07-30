@@ -62,6 +62,24 @@ export const schema = /* GraphQL */ `
     occurredAt: String!
   }
 
+  type NotificationDigest {
+    notificationCount: Int!
+    latestNotificationTitle: String
+    latestNotificationGame: String
+    recentNotifications: [NotificationItem!]!
+    generatedAt: String!
+  }
+
+  type NotificationItem {
+    eventType: String!
+    title: String!
+    message: String!
+    severity: String!
+    gameName: String!
+    status: String!
+    occurredAt: String!
+  }
+
   input CredentialsInput {
     email: String!
     password: String!
@@ -87,6 +105,7 @@ export const schema = /* GraphQL */ `
     backlog: [BacklogEntry!]!
     backlogStats: Stats!
     dashboardInsights: DashboardInsights!
+    notificationDigest: NotificationDigest!
   }
 
   type Mutation {

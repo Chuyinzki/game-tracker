@@ -7,6 +7,7 @@ const envSchema = z.object({
   GAMES_SERVICE_URL: z.string().url(),
   BACKLOG_SERVICE_URL: z.string().url(),
   GO_SERVICE_URL: z.string().url(),
+  JAVA_SERVICE_URL: z.string().url(),
   FRONTEND_API_BASE_URL: z.string().url().optional()
 });
 

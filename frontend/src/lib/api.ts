@@ -1,4 +1,4 @@
-import type { AuthResponse, BacklogEntry, BacklogStatus, DashboardInsights, GameSummary, Stats } from "../types";
+import type { AuthResponse, BacklogEntry, BacklogStatus, DashboardInsights, GameSummary, NotificationDigest, Stats } from "../types";
 
 const API_BASE_URL = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL ?? "");
 
@@ -70,6 +70,10 @@ type GraphQLStatsQuery = {
 
 type GraphQLDashboardInsights = {
   dashboardInsights: DashboardInsights;
+};
+
+type GraphQLNotificationDigest = {
+  notificationDigest: NotificationDigest;
 };
 
 type GraphQLAddBacklogMutation = {
@@ -246,6 +250,26 @@ const DASHBOARD_INSIGHTS_QUERY = /* GraphQL */ `
   }
 `;
 
+const NOTIFICATION_DIGEST_QUERY = /* GraphQL */ `
+  query NotificationDigest {
+    notificationDigest {
+      notificationCount
+      latestNotificationTitle
+      latestNotificationGame
+      recentNotifications {
+        eventType
+        title
+        message
+        severity
+        gameName
+        status
+        occurredAt
+      }
+      generatedAt
+    }
+  }
+`;
+
 const ADD_TO_BACKLOG_MUTATION = /* GraphQL */ `
   mutation AddToBacklog($input: AddBacklogInput!) {
     addToBacklog(input: $input) {
@@ -307,6 +331,11 @@ export const api = {
   fetchDashboardInsights(token: string) {
     return graphqlRequest<GraphQLDashboardInsights>(DASHBOARD_INSIGHTS_QUERY, undefined, token).then((data) =>
       data.dashboardInsights
+    );
+  },
+  fetchNotificationDigest(token: string) {
+    return graphqlRequest<GraphQLNotificationDigest>(NOTIFICATION_DIGEST_QUERY, undefined, token).then((data) =>
+      data.notificationDigest
     );
   },
   addToBacklog(game: GameSummary, status: BacklogStatus, token: string) {
