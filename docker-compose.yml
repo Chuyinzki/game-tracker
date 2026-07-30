@@ -73,6 +73,25 @@ services:
     networks:
       - app-network
 
+  go-service:
+    build:
+      context: .
+      dockerfile: go-service/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      backlog-service:
+        condition: service_started
+      events-service:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    ports:
+      - "3004:3004"
+    networks:
+      - app-network
+
   games-service:
     build:
       context: .
@@ -97,6 +116,8 @@ services:
       backlog-service:
         condition: service_started
       games-service:
+        condition: service_started
+      go-service:
         condition: service_started
     restart: unless-stopped
     volumes:

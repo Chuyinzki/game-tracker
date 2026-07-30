@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import type { BacklogEntry, Stats } from "../types";
+import type { BacklogEntry, DashboardInsights, Stats } from "../types";
 
 type StatsPageProps = {
   token: string;
@@ -15,13 +15,23 @@ const cards = [
 
 export function StatsPage({ token }: StatsPageProps) {
   const [stats, setStats] = useState<Stats | null>(null);
+  const [insights, setInsights] = useState<DashboardInsights | null>(null);
   const [topRated, setTopRated] = useState<BacklogEntry[]>([]);
+  const [showRecentEvents, setShowRecentEvents] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     void api.fetchStats(token)
       .then(setStats)
       .catch((loadError: unknown) => setError(loadError instanceof Error ? loadError.message : "Unable to load stats."));
+  }, [token]);
+
+  useEffect(() => {
+    void api.fetchDashboardInsights(token)
+      .then(setInsights)
+      .catch(() => {
+        setInsights(null);
+      });
   }, [token]);
 
   useEffect(() => {
@@ -48,6 +58,78 @@ export function StatsPage({ token }: StatsPageProps) {
 
   return (
     <section className="space-y-4">
+      {insights ? (
+        <section className="rounded-[2rem] border border-sky-100 bg-sky-50/70 p-5 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-sky-700">Go service</p>
+              <h3 className="mt-1 font-display text-2xl text-sky-900">Concurrent dashboard insights</h3>
+            </div>
+            <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+              {insights.recentEventCount} recent events
+            </span>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Total entries</p>
+              <p className="mt-2 font-display text-4xl text-ink">{insights.totalEntries}</p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Completed</p>
+              <p className="mt-2 font-display text-4xl text-ink">{insights.completedEntries}</p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Average rating</p>
+              <p className="mt-2 font-display text-4xl text-ink">{insights.averageRating ?? "N/A"}</p>
+            </article>
+            <article className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Latest event</p>
+              <p className="mt-2 text-lg font-semibold text-ink">{insights.latestEventType ?? "No recent events"}</p>
+              <p className="mt-1 text-sm text-slate-500">{insights.latestEventGame ?? "Nothing yet"}</p>
+            </article>
+          </div>
+          <div className="mt-4 rounded-[1.5rem] bg-white p-4 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setShowRecentEvents((current) => !current)}
+              className="flex w-full items-center justify-between gap-4 text-left"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-slate-500">Recent activity</p>
+                <p className="mt-1 text-sm text-slate-700">Expand to inspect the most recent events from the Go service.</p>
+              </div>
+              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700">
+                {showRecentEvents ? "Hide" : "Show"}
+              </span>
+            </button>
+            {showRecentEvents ? (
+              <div className="mt-4 space-y-3">
+                {insights.recentEvents.length > 0 ? insights.recentEvents.map((event) => (
+                  <article key={`${event.eventType}-${event.occurredAt}`} className="rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold text-ink">{event.gameName}</p>
+                        <p className="text-sm text-slate-500">{event.eventType}</p>
+                      </div>
+                      <span className="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sky-800">
+                        {event.status.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      {new Date(event.occurredAt).toLocaleString()}
+                    </p>
+                  </article>
+                )) : (
+                  <p className="text-sm text-slate-500">No recent events yet.</p>
+                )}
+              </div>
+            ) : null}
+          </div>
+          <p className="mt-4 text-sm text-sky-900/70">
+            Generated at {new Date(insights.generatedAt).toLocaleString()}
+          </p>
+        </section>
+      ) : null}
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
           <article key={card.key} className="rounded-[2rem] border border-white/60 bg-white/80 p-6 shadow-[0_24px_80px_rgba(16,24,40,0.08)]">

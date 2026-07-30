@@ -2,6 +2,25 @@ import amqp from "amqplib";
 import type { FastifyInstance } from "fastify";
 import { RABBITMQ_EXCHANGE, RABBITMQ_QUEUE, summarizeEvent, type BacklogEvent, type StoredEvent } from "./events.js";
 
+async function connectWithRetry(url: string, attempts = 10, delayMs = 1000) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await amqp.connect(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Unable to connect to RabbitMQ.");
+}
+
 declare module "fastify" {
   interface FastifyInstance {
     recentEvents: StoredEvent[];
@@ -13,7 +32,7 @@ function parseEvent(body: Buffer): BacklogEvent {
 }
 
 export async function startEventConsumer(app: FastifyInstance, url: string) {
-  const connection = await amqp.connect(url);
+  const connection = await connectWithRetry(url);
   const channel = await connection.createChannel();
 
   await channel.assertExchange(RABBITMQ_EXCHANGE, "topic", {

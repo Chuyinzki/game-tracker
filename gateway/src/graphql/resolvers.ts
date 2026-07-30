@@ -34,6 +34,23 @@ type Stats = {
   avgRating: number | null;
 };
 
+type DashboardInsights = {
+  totalEntries: number;
+  completedEntries: number;
+  averageRating: number | null;
+  recentEventCount: number;
+  latestEventType: string | null;
+  latestEventGame: string | null;
+  topRatedGame: string | null;
+  recentEvents: Array<{
+    eventType: string;
+    gameName: string;
+    status: string;
+    occurredAt: string;
+  }>;
+  generatedAt: string;
+};
+
 const STATUS_TO_GRAPHQL = {
   want_to_play: "WANT_TO_PLAY",
   playing: "PLAYING",
@@ -175,6 +192,22 @@ export const resolvers = {
         });
       } catch (error) {
         throw new GraphQLError(errorMessage(error, "Unable to load stats."), {
+          extensions: {
+            code: "UPSTREAM_ERROR"
+          }
+        });
+      }
+    },
+    dashboardInsights: async (_parent: unknown, _args: unknown, context: MercuriusContext) => {
+      const user = requireUser(context);
+      const { GO_SERVICE_URL } = context.app.gatewayEnv;
+
+      try {
+        return await requestJson<DashboardInsights>(`${GO_SERVICE_URL}/insights/dashboard`, {
+          headers: userHeaders(user)
+        });
+      } catch (error) {
+        throw new GraphQLError(errorMessage(error, "Unable to load dashboard insights."), {
           extensions: {
             code: "UPSTREAM_ERROR"
           }

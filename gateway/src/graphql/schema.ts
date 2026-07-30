@@ -43,6 +43,25 @@ export const schema = /* GraphQL */ `
     avgRating: Float
   }
 
+  type DashboardInsights {
+    totalEntries: Int!
+    completedEntries: Int!
+    averageRating: Float
+    recentEventCount: Int!
+    latestEventType: String
+    latestEventGame: String
+    topRatedGame: String
+    recentEvents: [RecentEvent!]!
+    generatedAt: String!
+  }
+
+  type RecentEvent {
+    eventType: String!
+    gameName: String!
+    status: String!
+    occurredAt: String!
+  }
+
   input CredentialsInput {
     email: String!
     password: String!
@@ -67,6 +86,7 @@ export const schema = /* GraphQL */ `
     game(id: Int!): GameSummary
     backlog: [BacklogEntry!]!
     backlogStats: Stats!
+    dashboardInsights: DashboardInsights!
   }
 
   type Mutation {

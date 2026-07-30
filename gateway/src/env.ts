@@ -6,6 +6,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(16),
   GAMES_SERVICE_URL: z.string().url(),
   BACKLOG_SERVICE_URL: z.string().url(),
+  GO_SERVICE_URL: z.string().url(),
   FRONTEND_API_BASE_URL: z.string().url().optional()
 });
 

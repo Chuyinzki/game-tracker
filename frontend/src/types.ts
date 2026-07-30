@@ -36,3 +36,20 @@ export type Stats = {
   abandoned: number;
   avgRating: number | null;
 };
+
+export type DashboardInsights = {
+  totalEntries: number;
+  completedEntries: number;
+  averageRating: number | null;
+  recentEventCount: number;
+  latestEventType: string | null;
+  latestEventGame: string | null;
+  topRatedGame: string | null;
+  recentEvents: Array<{
+    eventType: string;
+    gameName: string;
+    status: string;
+    occurredAt: string;
+  }>;
+  generatedAt: string;
+};

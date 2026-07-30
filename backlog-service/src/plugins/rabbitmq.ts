@@ -3,6 +3,25 @@ import fp from "fastify-plugin";
 import type { BacklogEvent } from "../lib/events.js";
 import { RABBITMQ_EXCHANGE } from "../lib/events.js";
 
+async function connectWithRetry(url: string, attempts = 10, delayMs = 1000) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await amqp.connect(url);
+    } catch (error) {
+      lastError = error;
+      if (attempt === attempts) {
+        break;
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, delayMs * attempt));
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Unable to connect to RabbitMQ.");
+}
+
 declare module "fastify" {
   interface FastifyInstance {
     rabbitmq: {
@@ -16,7 +35,7 @@ type RabbitMQPluginOptions = {
 };
 
 export const rabbitmqPlugin = fp(async (app, options: RabbitMQPluginOptions) => {
-  const connection = await amqp.connect(options.url);
+  const connection = await connectWithRetry(options.url);
   const channel = await connection.createConfirmChannel();
 
   await channel.assertExchange(RABBITMQ_EXCHANGE, "topic", {

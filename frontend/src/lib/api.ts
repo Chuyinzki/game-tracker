@@ -1,4 +1,4 @@
-import type { AuthResponse, BacklogEntry, BacklogStatus, GameSummary, Stats } from "../types";
+import type { AuthResponse, BacklogEntry, BacklogStatus, DashboardInsights, GameSummary, Stats } from "../types";
 
 const API_BASE_URL = import.meta.env.DEV ? "" : (import.meta.env.VITE_API_BASE_URL ?? "");
 
@@ -66,6 +66,10 @@ type GraphQLBacklogQuery = {
 
 type GraphQLStatsQuery = {
   backlogStats: GraphQLStats;
+};
+
+type GraphQLDashboardInsights = {
+  dashboardInsights: DashboardInsights;
 };
 
 type GraphQLAddBacklogMutation = {
@@ -221,6 +225,27 @@ const STATS_QUERY = /* GraphQL */ `
   }
 `;
 
+const DASHBOARD_INSIGHTS_QUERY = /* GraphQL */ `
+  query DashboardInsights {
+    dashboardInsights {
+      totalEntries
+      completedEntries
+      averageRating
+      recentEventCount
+      latestEventType
+      latestEventGame
+      topRatedGame
+      recentEvents {
+        eventType
+        gameName
+        status
+        occurredAt
+      }
+      generatedAt
+    }
+  }
+`;
+
 const ADD_TO_BACKLOG_MUTATION = /* GraphQL */ `
   mutation AddToBacklog($input: AddBacklogInput!) {
     addToBacklog(input: $input) {
@@ -277,6 +302,11 @@ export const api = {
   fetchStats(token: string) {
     return graphqlRequest<GraphQLStatsQuery>(STATS_QUERY, undefined, token).then((data) =>
       toStats(data.backlogStats)
+    );
+  },
+  fetchDashboardInsights(token: string) {
+    return graphqlRequest<GraphQLDashboardInsights>(DASHBOARD_INSIGHTS_QUERY, undefined, token).then((data) =>
+      data.dashboardInsights
     );
   },
   addToBacklog(game: GameSummary, status: BacklogStatus, token: string) {
